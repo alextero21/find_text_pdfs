@@ -13,7 +13,7 @@ def buscar_texto_en_pdf(pdf_file, texto):
             if texto in page_text:
                 texto_encontrado = True
                 break
-    return texto_encontrado
+    return texto_encontrado, page_num, texto
 
 # Definir el diseño de la interfaz gráfica
 layout = [
@@ -34,16 +34,25 @@ while True:
         pdf_file = values['-ARCHIVO-']
         if pdf_file:
             pdf_file_name = os.path.basename(pdf_file)
-            if buscar_texto_en_pdf(pdf_file, texto_a_buscar):
-                sg.popup(f"El texto '{texto_a_buscar}' fue encontrado en el archivo:", title="Resultado de la búsqueda", custom_text=f'{pdf_file_name}', text_color='blue', font=('Helvetica', 12), keep_on_top=True)
+            texto_encontrado, page_num, texto = buscar_texto_en_pdf(pdf_file, texto_a_buscar)
+            if texto_encontrado:
+                sg.popup(f"El texto '{texto}' fue encontrado en el archivo:", title="Resultado de la búsqueda", custom_text=f'{pdf_file_name}', text_color='blue', font=('Helvetica', 12), keep_on_top=True)
+
+                # Abrir el PDF y resaltar la palabra buscada
+                doc = fitz.open(pdf_file)
+                page = doc[page_num]
+                text_instances = page.search_for(texto)
+                for inst in text_instances:
+                    page.add_highlight_annot(inst)
+
+                # Guardar el PDF con los cambios
+                pdf_output_file = f'{os.path.splitext(pdf_file)[0]}_marcado.pdf'
+                doc.save(pdf_output_file)
+                doc.close()
+
+                # Abrir el PDF marcado
+                os.startfile(pdf_output_file)
             else:
                 sg.popup(f"El texto '{texto_a_buscar}' no fue encontrado en el archivo '{pdf_file_name}'.")
-
-            # Abrir el PDF si se hace clic en el nombre del archivo
-            if os.path.exists(pdf_file):
-                os.startfile(pdf_file)
-            else:
-                sg.popup(f"No se pudo encontrar el archivo PDF '{pdf_file_name}'.")
-                continue
 
 window.close()
