@@ -35,12 +35,15 @@ while True:
         if pdf_file:
             pdf_file_name = os.path.basename(pdf_file)
             if buscar_texto_en_pdf(pdf_file, texto_a_buscar):
-                sg.popup('Abriendo PDF...', auto_close=True, auto_close_duration=2)
-                doc = fitz.open(pdf_file)
-                pdf_viewer = sg.Window(pdf_file_name, [[sg.Image(data=page.get_pixmap()) for page in doc.pages]])
-                pdf_viewer.read(close=True)
-                doc.close()
+                sg.popup(f"El texto '{texto_a_buscar}' fue encontrado en el archivo:", title="Resultado de la búsqueda", custom_text=f'{pdf_file_name}', text_color='blue', font=('Helvetica', 12), keep_on_top=True)
             else:
                 sg.popup(f"El texto '{texto_a_buscar}' no fue encontrado en el archivo '{pdf_file_name}'.")
+
+            # Abrir el PDF si se hace clic en el nombre del archivo
+            if os.path.exists(pdf_file):
+                os.startfile(pdf_file)
+            else:
+                sg.popup(f"No se pudo encontrar el archivo PDF '{pdf_file_name}'.")
+                continue
 
 window.close()
